@@ -16,7 +16,15 @@ app.use(express.static("public"));
 require("./routes/apiRoutes")(app);
 require("./routes/htmlRoutes")(app);
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workoutdb", { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true });
+mongoose.connect(
+    process.env.MONGODB_URI || "mongodb://localhost/workoutdb", 
+    { 
+        useNewUrlParser: true, 
+        useUnifiedTopology: true, 
+        useCreateIndex: true,
+        useFindAndModify: false
+    }
+);
 
 app.listen(PORT, () => {
     console.log(`App running on port ${PORT}!`);
