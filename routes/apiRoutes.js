@@ -2,59 +2,72 @@ const db = require("../models");
 
 // API routes
 module.exports = (app) => {
-    // getLastWorkout - retrieve
+    // getLastWorkout
     app.get("/api/workouts", (req, res) => {
-
+        db.Workout.find({}).sort({ _id: -1 }).limit(1)
+            .then((dbWorkout) => db.Workout.aggregate([
+                {
+                    $addFields: {
+                        totalDuration: { $sum: "$exercises.duration" }
+                    }
+                }
+            ])
+            .then(dbWorkout => {
+                console.log(dbWorkout);
+                res.json(dbWorkout);
+            })
+            .catch(err => {
+                res.json(err);
+            }));
     });
 
-    // addExercise - update
+    // addExercise to most recent workout
     app.put("/api/workouts/:id", (req, res) => {
-
+        db.Workout.updateOne({ 
+            _id: req.params.id 
+        }, 
+        { 
+            $push: {
+                exercises: req.body
+            }
+        })
+        .then(dbWorkout => {
+            // console.log(dbWorkout);
+            res.json(dbWorkout);
+        })
+        .catch(err => {
+            res.json(err);
+        });
     });
 
-    // createWorkout - create
+    // createWorkout - new
     app.post("/api/workouts", (req, res) => {
-        
+        console.log(req.body);
+        db.Workout.create(req.body)
+            .then(dbWorkout => {
+                console.log(dbWorkout);
+                res.json(dbWorkout);
+            })
+            .catch(err => {
+                res.json(err);
+            });
     });
 
-    // getWorkoutsInRange - retrieve
-    // app.get("/api/workouts/range", (req, res) => {
-    //     db.Workout.find({}, (err, dbWorkout) => {
-    //         if (err) {
-    //             console.log(err);
-    //             res.send(err);
-    //         } else {
-    //             // console.log(dbWorkout);
-    //             console.log(dbWorkout[0].exercises);
-    //             console.log(dbWorkout[1].exercises);
-    //             console.log(dbWorkout[2].exercises);
-    //             console.log(dbWorkout[3].exercises);
-    //             console.log(dbWorkout[4].exercises);
-    //             console.log(dbWorkout[5].exercises);
-    //             console.log(dbWorkout[6].exercises);
-    //             console.log(dbWorkout[7].exercises);
-    //             console.log(dbWorkout[8].exercises);
-    //             res.json(dbWorkout);
-    //         }
-    //     });
-    // });
-    // app.get("/api/workouts/range", (req, res) => {
-    //     db.Workout.find({})
-    //         .then(dbWorkout => {
-    //             console.log(dbWorkout);
-    //             res.json(dbWorkout);
-    //         })
-    //         .catch(err => {
-    //             res.json(err);
-    //         });
-    // });
+    // getWorkoutsInRange
     app.get("/api/workouts/range", (req, res) => {
         db.Workout.aggregate([
                 {
                     $addFields: {
                         totalDuration: { $sum: "$exercises.duration" },
-                        totalPounds: { $sum: "$exercises.pounds" }
+                        totalPounds: { $sum: "$exercises.weight" }
+                        // totalWeight: { $sum: "$exercises.weight" },
+                        // totalSets: { $sum: "$exercises.sets" },
+                        // totalReps: { $sum: "$exercises.reps" },
+                        // totalDistance: { $sum: "$exercises.distance" }
                     }
+                },
+                {
+                    $sort: { day: 1 }
                 },
                 {
                     $limit: 7
