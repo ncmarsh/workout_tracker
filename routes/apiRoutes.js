@@ -13,7 +13,6 @@ module.exports = (app) => {
                 }
             ])
             .then(dbWorkout => {
-                console.log(dbWorkout);
                 res.json(dbWorkout);
             })
             .catch(err => {
@@ -32,7 +31,6 @@ module.exports = (app) => {
             }
         })
         .then(dbWorkout => {
-            // console.log(dbWorkout);
             res.json(dbWorkout);
         })
         .catch(err => {
@@ -42,10 +40,8 @@ module.exports = (app) => {
 
     // createWorkout - new
     app.post("/api/workouts", (req, res) => {
-        console.log(req.body);
         db.Workout.create(req.body)
             .then(dbWorkout => {
-                console.log(dbWorkout);
                 res.json(dbWorkout);
             })
             .catch(err => {
@@ -56,29 +52,28 @@ module.exports = (app) => {
     // getWorkoutsInRange
     app.get("/api/workouts/range", (req, res) => {
         db.Workout.aggregate([
-                {
-                    $addFields: {
-                        totalDuration: { $sum: "$exercises.duration" },
-                        totalPounds: { $sum: "$exercises.weight" }
-                        // totalWeight: { $sum: "$exercises.weight" },
-                        // totalSets: { $sum: "$exercises.sets" },
-                        // totalReps: { $sum: "$exercises.reps" },
-                        // totalDistance: { $sum: "$exercises.distance" }
-                    }
-                },
-                {
-                    $sort: { day: 1 }
-                },
-                {
-                    $limit: 7
+            {
+                $sort: { _id: -1 }
+            },
+            {
+                $limit: 7
+            },
+            {
+                $addFields: {
+                    totalDuration: { $sum: "$exercises.duration" },
+                    totalPounds: { $sum: "$exercises.weight" }
                 }
-            ])
-            .then(dbWorkout => {
-                console.log(dbWorkout);
-                res.json(dbWorkout);
-            })
-            .catch(err => {
-                res.json(err);
-            });
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ])
+        .then(dbWorkout => {
+            console.log(dbWorkout);
+            res.json(dbWorkout);
+        })
+        .catch(err => {
+            res.json(err);
+        });
     });
 };
